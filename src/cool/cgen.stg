@@ -1,0 +1,438 @@
+sequence(e) ::= "<e; separator=\"\n\">"
+sequenceSpaced(e) ::= "<e; separator=\"\n\n\">"
+
+program(literalConsts, protObjs, dispTabs, inits,
+        methods, classNames, classObjects) ::= <<
+.data
+    .align  2
+    .globl  class_nameTab
+    .globl  Int_protObj
+    .globl  String_protObj
+    .globl  bool_const0
+    .globl  bool_const1
+    .globl  Main_protObj
+    .globl  _int_tag
+    .globl  _string_tag
+    .globl  _bool_tag
+
+_int_tag:
+    .word 2
+_string_tag:
+    .word 3
+_bool_tag:
+    .word 4
+
+<literalConsts>
+
+bool_const0:
+    .word 4
+    .word 4
+    .word Bool_dispTab
+    .word 0
+
+bool_const1:
+    .word 4
+    .word 4
+    .word Bool_dispTab
+    .word 1
+
+class_nameTab:
+    .word str_const1
+    .word str_const2
+    .word str_const3
+    .word str_const4
+    .word str_const5
+<classNames>
+
+class_objTab:
+    .word   Object_protObj
+    .word   Object_init
+    .word   IO_protObj
+    .word   IO_init
+    .word   Int_protObj
+    .word   Int_init
+    .word   String_protObj
+    .word   String_init
+    .word   Bool_protObj
+    .word   Bool_init
+<classObjects>
+
+<protObjs>
+Object_dispTab:
+    .word Object.abort
+    .word Object.type_name
+    .word Object.copy
+
+IO_dispTab:
+    .word Object.abort
+    .word Object.type_name
+    .word Object.copy
+    .word IO.out_string
+    .word IO.out_int
+    .word IO.in_string
+    .word IO.in_int
+
+Int_dispTab:
+    .word Object.abort
+    .word Object.type_name
+    .word Object.copy
+
+String_dispTab:
+    .word Object.abort
+    .word Object.type_name
+    .word Object.copy
+    .word String.length
+    .word String.concat
+    .word String.substr
+
+Bool_dispTab:
+    .word Object.abort
+    .word Object.type_name
+    .word Object.copy
+
+<dispTabs>
+heap_start:
+    .word 0
+.text
+    .globl  Int_init
+    .globl  String_init
+    .globl  Bool_init
+    .globl  Main_init
+    .globl  Main.main
+
+Object_init:
+    addiu   $sp $sp -12
+    sw      $fp 12($sp)
+    sw      $s0 8($sp)
+    sw      $ra 4($sp)
+    addiu   $fp $sp 4
+    move    $s0 $a0
+    move    $a0 $s0
+    lw      $fp 12($sp)
+    lw      $s0 8($sp)
+    lw      $ra 4($sp)
+    addiu   $sp $sp 12
+    jr      $ra
+
+IO_init:
+    addiu   $sp $sp -12
+    sw      $fp 12($sp)
+    sw      $s0 8($sp)
+    sw      $ra 4($sp)
+    addiu   $fp $sp 4
+    move    $s0 $a0
+    jal     Object_init
+    move    $a0 $s0
+    lw      $fp 12($sp)
+    lw      $s0 8($sp)
+    lw      $ra 4($sp)
+    addiu   $sp $sp 12
+    jr      $ra
+
+Int_init:
+    addiu   $sp $sp -12
+    sw      $fp 12($sp)
+    sw      $s0 8($sp)
+    sw      $ra 4($sp)
+    addiu   $fp $sp 4
+    move    $s0 $a0
+    jal     Object_init
+    move    $a0 $s0
+    lw      $fp 12($sp)
+    lw      $s0 8($sp)
+    lw      $ra 4($sp)
+    addiu   $sp $sp 12
+    jr      $ra
+
+String_init:
+    addiu   $sp $sp -12
+    sw      $fp 12($sp)
+    sw      $s0 8($sp)
+    sw      $ra 4($sp)
+    addiu   $fp $sp 4
+    move    $s0 $a0
+    jal     Object_init
+    move    $a0 $s0
+    lw      $fp 12($sp)
+    lw      $s0 8($sp)
+    lw      $ra 4($sp)
+    addiu   $sp $sp 12
+    jr      $ra
+
+Bool_init:
+    addiu   $sp $sp -12
+    sw      $fp 12($sp)
+    sw      $s0 8($sp)
+    sw      $ra 4($sp)
+    addiu   $fp $sp 4
+    move    $s0 $a0
+    jal     Object_init
+    move    $a0 $s0
+    lw      $fp 12($sp)
+    lw      $s0 8($sp)
+    lw      $ra 4($sp)
+    addiu   $sp $sp 12
+    jr      $ra
+
+<inits>
+
+<methods>
+>>
+
+protObj(className, classId, classDim, attribs) ::= <<
+<className>_protObj:
+    .word <classId>
+    .word <classDim>
+    .word <className>_dispTab
+<attribs>
+
+>>
+
+attribString(initVal, length) ::= <<
+    .word <length>
+    .asciiz <initVal>
+    .align 2
+>>
+
+attrib(initVal) ::= <<
+    .word <initVal>
+>>
+
+stringLiteral(count, size, length, value) ::= <<
+str_const<count>:
+    .word 3
+    .word <size>
+    .word String_dispTab
+    .word <length>
+    .asciiz <value>
+    .align 2
+>>
+
+intLiteral(count, value) ::= <<
+int_const<count>:
+    .word 2
+    .word 4
+    .word Int_dispTab
+    .word <value>
+>>
+
+dispatchTable(className, methods) ::= <<
+<className>_dispTab:
+<methods>
+
+>>
+
+init(className, directParent, attrInit) ::= <<
+<className>_init:
+    addiu   $sp $sp -12
+    sw      $fp 12($sp)
+    sw      $s0 8($sp)
+    sw      $ra 4($sp)
+    addiu   $fp $sp 4
+    move    $s0 $a0
+    jal     <directParent>_init
+<attrInit>
+    move    $a0 $s0
+    lw      $fp 12($sp)
+    lw      $s0 8($sp)
+    lw      $ra 4($sp)
+    addiu   $sp $sp 12
+    jr      $ra
+>>
+
+attrInit(initExpr, offset) ::= <<
+<initExpr>
+    sw      $a0 <offset>($s0)
+>>
+
+methodDeclare(className, methodName, body, nrParams) ::= <<
+<className>.<methodName>:
+    addiu   $sp $sp -12
+    sw      $fp 12($sp)
+    sw      $s0 8($sp)
+    sw      $ra 4($sp)
+    addiu   $fp $sp 4
+    move    $s0 $a0
+<body>
+    lw      $fp 12($sp)
+    lw      $s0 8($sp)
+    lw      $ra 4($sp)
+    addiu   $sp $sp 12
+<nrParams>
+    jr      $ra
+>>
+
+loadLiteral(value) ::= <<
+    la      $a0 <value>
+>>
+
+implicitCall(params, fileName, fileLine, methodOffset, dispCount) ::= <<
+<params>
+    move    $a0 $s0
+    bnez    $a0 dispatch<dispCount>
+    la      $a0 <fileName>
+    li      $t1 <fileLine>
+    jal     _dispatch_abort
+dispatch<dispCount>:
+    lw      $t1 8($a0)   # dispatch table
+    lw      $t1 <methodOffset>($t1)   # method offset
+    jalr    $t1
+>>
+
+loadParam(expr) ::= <<
+<expr>
+    sw      $a0 0($sp)
+    addiu   $sp $sp -4
+>>
+
+assignExpr(expr, offset, basePointer) ::= <<
+<expr>
+    sw      $a0 <offset>(<basePointer>)
+>>
+
+loadAttrib(offset, basePointer) ::= <<
+    lw      $a0 <offset>(<basePointer>)
+>>
+
+explicitCall(params, dispExpr, fileName, fileLine, methodOffset, dispCount, dispTable) ::= <<
+<params>
+<dispExpr>
+    bnez    $a0 dispatch<dispCount>
+    la      $a0 <fileName>
+    li      $t1 <fileLine>
+    jal     _dispatch_abort
+dispatch<dispCount>:
+<dispTable>   # dispatch table
+    lw      $t1 <methodOffset>($t1)   # method offset
+    jalr    $t1
+>>
+
+let(nrLocals, inits, body) ::= <<
+    addiu   $sp $sp -<nrLocals> # locals alloc
+<inits>
+<body>
+    addiu   $sp $sp <nrLocals>  # locals free
+>>
+
+new(protObject, initFunc) ::= <<
+    la      $a0 <protObject>
+    jal     Object.copy
+    jal     <initFunc>
+>>
+
+newSelfType() ::= <<
+    la      $t1 class_objTab
+    lw      $t2 0($s0)          # class tag
+    sll     $t2 $t2 3           # *8
+    addu    $t1 $t1 $t2         # class_objTab + 8 * tag
+    sw      $t1 0($sp)
+    addiu   $sp $sp -4
+    lw      $a0 0($t1)          # _protObj
+    jal     Object.copy
+    lw      $t1 4($sp)
+    addiu   $sp $sp 4
+    lw      $t1 4($t1)          # _init
+    jalr    $t1
+>>
+
+if(condExpr, trueExpr, elseExpr, elseLabel, endifLabel) ::= <<
+<condExpr>
+    lw      $t1 12($a0)     # bool slot
+    beqz    $t1 <elseLabel>
+<trueExpr>
+    b       <endifLabel>
+<elseLabel>:
+<elseExpr>
+<endifLabel>:
+>>
+
+isvoid(expr, isvoidCount) ::= <<
+<expr>
+    move    $t1 $a0
+    la      $a0 bool_const1
+    beqz    $t1 <isvoidCount>
+    la      $a0 bool_const0
+<isvoidCount>:
+>>
+
+not(expr, notCount) ::= <<
+<expr>
+    lw      $t1 12($a0)     # bool slot
+    la      $a0 bool_const1
+    beqz    $t1 <notCount>
+    la      $a0 bool_const0
+<notCount>:
+>>
+
+arithmeticExpr(leftExpr, rightExpr, op) ::= <<
+<leftExpr>
+    sw      $a0 0($sp)
+    addiu   $sp $sp -4
+<rightExpr>
+    jal     Object.copy
+    lw      $t1 4($sp)
+    addiu   $sp $sp 4
+    lw      $t1 12($t1)     # int slot
+    lw      $t2 12($a0)     # int slot
+    <op>     $t1 $t1 $t2
+    sw      $t1 12($a0)     # int slot
+>>
+
+tildaCpop(expr) ::= <<
+<expr>
+    jal     Object.copy
+    lw      $t1 12($a0)     # int slot
+    neg     $t1 $t1
+    sw      $t1 12($a0)     # int slot
+>>
+
+equality(leftExpr, rightExpr, eqLabel) ::= <<
+<leftExpr>
+    sw      $a0 0($sp)
+    addiu   $sp $sp -4
+<rightExpr>
+    lw      $t1 4($sp)
+    addiu   $sp $sp 4
+    move    $t2 $a0
+    la      $a0 bool_const1
+    beq     $t1 $t2 <eqLabel>
+    la      $a1 bool_const0
+    jal     equality_test
+<eqLabel>:
+>>
+
+compare(leftExpr, rightExpr, relLabel, op) ::= <<
+<leftExpr>
+    sw      $a0 0($sp)
+    addiu   $sp $sp -4
+<rightExpr>
+    lw      $t1 4($sp)
+    addiu   $sp $sp 4
+    lw      $t1 12($t1)     # int slot
+    lw      $t2 12($a0)     # int slot
+    la      $a0 bool_const1
+    <op>     $t1 $t2 <relLabel>
+    la      $a0 bool_const0
+<relLabel>:
+>>
+
+while(whileLabel, endWhileLabel, condition, body) ::= <<
+<whileLabel>:
+<condition>
+    lw      $t1 12($a0)     # bool slot
+    beqz    $t1 <endWhileLabel>
+<body>
+    b       <whileLabel>
+<endWhileLabel>:
+    move    $a0 $zero
+>>
+
+case(expr, caseLabel, fileName, fileLine) ::= <<
+    addiu   $sp $sp -4   # locals alloc
+<expr>
+    bnez    $a0 <caseLabel>
+    la      $a0 <fileName>
+    li      $t1 <fileLine>
+    jal     _case_abort2
+<caseLabel>:
+>>
